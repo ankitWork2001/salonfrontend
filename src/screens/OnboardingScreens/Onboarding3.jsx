@@ -30,6 +30,10 @@ export default function Onboarding3({ navigation }) {
         {/* Semi-transparent overlay for better text readability */}
         <View style={styles.overlay} />
 
+        <TouchableOpacity onPress={()=>(navigation.navigate('Onboarding4'))} style={styles.skipbtn}>
+          <Text>{'SKIP>>'}</Text>
+        </TouchableOpacity>
+
         <View style={styles.contentContainer}>
           <Text style={styles.title}>Find The Best Service</Text>
           <Text style={styles.subtitle}>
@@ -38,9 +42,9 @@ export default function Onboarding3({ navigation }) {
 
           {/* Pagination Dots */}
           <View style={styles.paginationContainer}>
-            <View style={styles.dot} />
-            <View style={styles.dot} />
-            <View style={[styles.dot, styles.activeDot]} />
+            <TouchableOpacity onPress={() => navigation.navigate('Onboarding1')} style={styles.dot} />
+            <TouchableOpacity onPress={() => navigation.navigate('Onboarding2')} style={styles.dot} />
+            <TouchableOpacity style={[styles.dot, styles.activeDot]} />
           </View>
 
           {/* Get Started Button */}
@@ -71,11 +75,13 @@ const styles = StyleSheet.create({
   imageBackground: {
     flex: 1,
     justifyContent: 'flex-end', // Aligns content to the bottom
+    paddingBottom: 60
   },
   overlay: {
     ...StyleSheet.absoluteFillObject, // Covers the entire parent
     backgroundColor: 'rgba(0, 0, 0, 0.3)', // Dark overlay
   },
+  skipbtn:{marginBottom: 520, marginLeft: 360 },
   contentContainer: {
     paddingHorizontal: 25,
     paddingBottom: 40, // Space from the bottom edge

@@ -20,9 +20,17 @@ export default function Onboarding2({ navigation }) {
       <ImageBackground
         source={backgroundImage}
         resizeMode="cover"
-        style={styles.imageBackground}>
+        style={styles.imageBackground}
+      >
         {/* Semi-transparent overlay for better text readability */}
         <View style={styles.overlay} />
+
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Onboarding4')}
+          style={styles.skipbtn}
+        >
+          <Text>{'SKIP>>'}</Text>
+        </TouchableOpacity>
 
         <View style={styles.contentContainer}>
           <Text style={styles.title}>Meet Our Specialists</Text>
@@ -32,20 +40,29 @@ export default function Onboarding2({ navigation }) {
 
           {/* Pagination Dots */}
           <View style={styles.paginationContainer}>
-            <View style={styles.dot} />
-            <View style={[styles.dot, styles.activeDot]} />
-            <View style={styles.dot} />
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Onboarding1')}
+              style={styles.dot}
+            />
+            <TouchableOpacity style={[styles.dot, styles.activeDot]} />
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Onboarding3')}
+              style={styles.dot}
+            />
           </View>
 
           {/* Next Button */}
           <TouchableOpacity
             style={styles.nextButton}
-            onPress={() => navigation.navigate('Onboarding3')}>
+            onPress={() => navigation.navigate('Onboarding3')}
+          >
             <Text style={styles.nextButtonText}>Next</Text>
           </TouchableOpacity>
 
           {/* Sign In Link */}
-          <TouchableOpacity onPress={() =>  navigation.navigate('Auth', { screen: 'Login' })}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Auth', { screen: 'Login' })}
+          >
             <Text style={styles.footerText}>
               Already have an account?{' '}
               <Text style={styles.signInLink}>Sign in</Text>
@@ -65,11 +82,13 @@ const styles = StyleSheet.create({
   imageBackground: {
     flex: 1,
     justifyContent: 'flex-end', // Aligns content to the bottom
+    paddingBottom: 60,
   },
   overlay: {
     ...StyleSheet.absoluteFillObject, // Covers the entire parent
     backgroundColor: 'rgba(0, 0, 0, 0.3)', // Dark overlay
   },
+  skipbtn:{marginBottom: 520, marginLeft: 360 },
   contentContainer: {
     paddingHorizontal: 25,
     paddingBottom: 40, // Space from the bottom edge

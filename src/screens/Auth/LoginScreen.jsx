@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,20 +7,50 @@ import {
   StyleSheet,
   Image,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
-import { useAuth } from '../../context/AuthContext';
 import Feather from 'react-native-vector-icons/Feather';
+import { useDispatch, useSelector } from 'react-redux';
+import { loginUser } from '../../redux/slices/authSlice'; // ✅ import thunk
+import { showSnackbar } from '../../redux/slices/snackbarSlice';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
-export default function LoginScreen({navigation}) {
-  const { login } = useAuth();
+export default function LoginScreen({ navigation }) {
+  const dispatch = useDispatch();
+  const { loading, user } = useSelector(state => state.auth);
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
+  // ✅ Handle login
   const handleLogin = () => {
-    // simulate login success
-    login({ name: 'John Doe', email });
-    console.log('Logging in with:', { email, password });
+    if (!email || !password) {
+      dispatch(
+        showSnackbar({
+          message: 'Please enter both email and password',
+          type: 'error',
+          duration: 3000,
+        }),
+      );
+      return;
+    }
+    dispatch(loginUser({ email, password }));
+  };
+
+  const signInWithGoogle = async () => {
+    try {
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+      console.log(userInfo);
+
+      const idToken = userInfo.data.idToken;
+
+      // Send this token to backend
+      console.log(idToken);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
@@ -28,71 +58,81 @@ export default function LoginScreen({navigation}) {
       <StatusBar barStyle="dark-content" />
       <Text style={styles.welcome}>Welcome back,</Text>
       <Text style={styles.subtitle}>
-        Glad to meet you again!, please login to use the app.
+        Glad to meet you again! Please login to use the app.
       </Text>
 
-      {/* Email Input */}
       <View style={styles.inputBox}>
-      <View style={styles.inputWrapper}>
-        <Feather name="mail" size={20} color="#888" style={styles.icon} />
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor="#999"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-      </View>
-
-      {/* Password Input */}
-      <View style={styles.inputWrapper}>
-        <Feather name="lock" size={20} color="#888" style={styles.icon} />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor="#999"
-          secureTextEntry={!isPasswordVisible}
-          value={password}
-          onChangeText={setPassword}
-        />
-        <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisible)}>
-          <Feather
-            name={isPasswordVisible ? 'eye' : 'eye-off'}
-            size={20}
-            color="#888"
+        {/* Email Input */}
+        <View style={styles.inputWrapper}>
+          <Feather name="mail" size={20} color="#888" style={styles.icon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            placeholderTextColor="#999"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
           />
+        </View>
+
+        {/* Password Input */}
+        <View style={styles.inputWrapper}>
+          <Feather name="lock" size={20} color="#888" style={styles.icon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            placeholderTextColor="#999"
+            secureTextEntry={!isPasswordVisible}
+            value={password}
+            onChangeText={setPassword}
+          />
+          <TouchableOpacity
+            onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+          >
+            <Feather
+              name={isPasswordVisible ? 'eye' : 'eye-off'}
+              size={20}
+              color="#888"
+            />
+          </TouchableOpacity>
+        </View>
+
+        {/* Forgot Password */}
+        <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+          <Text style={styles.forgotText}>Forgot password?</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Forgot Password */}
-      <TouchableOpacity>
-        <Text onPress={() => navigation.navigate('ForgotPassword')} style={styles.forgotText}>Forgot password?</Text>
-      </TouchableOpacity>
-      </View>
-
       {/* Sign In Button */}
-      <TouchableOpacity style={styles.signInButton} onPress={handleLogin}>
-        <Text style={styles.signInText}>Sign In</Text>
+      <TouchableOpacity
+        style={styles.signInButton}
+        onPress={handleLogin}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.signInText}>Sign In</Text>
+        )}
       </TouchableOpacity>
 
       {/* Divider */}
       <Text style={styles.orText}>or</Text>
 
       {/* Google Sign-In */}
-      <TouchableOpacity style={styles.googleButton}>
+      <TouchableOpacity onPress={signInWithGoogle} style={styles.googleButton}>
         <Image
-          source={require('../../assets/google-logo.png')} // Make sure you have this image
+          source={require('../../assets/google-logo.png')}
           style={styles.googleIcon}
         />
         <Text style={styles.googleText}>Sign in with Google</Text>
       </TouchableOpacity>
 
       {/* Register */}
-      <TouchableOpacity>
+      <TouchableOpacity onPress={() => navigation.navigate('Register')}>
         <Text style={styles.footerText}>
-          Don’t have an account? <Text onPress={() => navigation.navigate('Register')} style={styles.joinNow}>Join Now</Text>
+          Don’t have an account? <Text style={styles.joinNow}>Join Now</Text>
         </Text>
       </TouchableOpacity>
     </View>
@@ -102,7 +142,7 @@ export default function LoginScreen({navigation}) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffffff', // Lighter background color
+    backgroundColor: '#fff',
     paddingHorizontal: 25,
     justifyContent: 'center',
   },
@@ -120,14 +160,13 @@ const styles = StyleSheet.create({
   inputBox: {
     marginVertical: 80,
   },
-  // New wrapper for icon and text input
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F0F3F6',
     borderWidth: 1,
     borderColor: '#F0F3F6',
-    borderRadius: 30, // Fully rounded corners
+    borderRadius: 30,
     paddingHorizontal: 15,
     marginBottom: 15,
   },
@@ -141,18 +180,17 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   forgotText: {
-    color: '#1E90FF', // Brighter blue
+    color: '#1E90FF',
     alignSelf: 'flex-end',
     marginBottom: 30,
     fontWeight: '600',
   },
   signInButton: {
-    backgroundColor: '#156778', // Teal color from image
+    backgroundColor: '#156778',
     paddingVertical: 18,
     borderRadius: 30,
     alignItems: 'center',
     marginBottom: 30,
-    // Adding a subtle shadow
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,

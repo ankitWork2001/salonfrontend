@@ -7,9 +7,18 @@ import {
   StyleSheet,
   Image,
   StatusBar,
+  Alert,
+  ScrollView,
 } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
-import { Picker } from '@react-native-picker/picker'; // For the country code picker
+import { Picker } from '@react-native-picker/picker';
+import { useDispatch, useSelector } from "react-redux";
+import { signupUser } from '../../redux/slices/authSlice';
+import Loader from '../../components/Loader';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+
+  const regexEmail = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  const regexPnoneNo = /^[6-9]\d{9}$/;
 
 export default function RegisterScreen({navigation}) {
   const [name, setName] = useState('');
@@ -17,129 +26,190 @@ export default function RegisterScreen({navigation}) {
   const [mobileNumber, setMobileNumber] = useState('');
   const [password, setPassword] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  const [selectedCountryCode, setSelectedCountryCode] = useState('+01'); // Default country code
+  const [selectedCountryCode, setSelectedCountryCode] = useState('+91');
 
-  const handleRegister = () => {
-    console.log('Registering with:', { name, email, mobileNumber, password });
-    // Add your registration logic here
+  const dispatch = useDispatch();
+  const { signUpLoading, error } = useSelector((state) => state.auth);
+
+  const countryFlags = {
+    '+91': 'https://flagcdn.com/w20/in.png',
+    '+01': 'https://flagcdn.com/w20/us.png',
+    '+44': 'https://flagcdn.com/w20/gb.png',
   };
+
+  const handleRegister = async () => {
+    if (!name || !email || !mobileNumber || !password) {
+      Alert.alert("Error", "Please fill all fields");
+      return;
+    }
+    else if(!regexEmail.test(email)){
+      Alert.alert("Please Enter Valid Email!");
+      return;
+    }else if(!regexPnoneNo.test(mobileNumber)){
+      Alert.alert("Please Enter Valid Mobile Number!");
+      return;
+    }
+    try {
+      await dispatch(signupUser({ name, email, phone: mobileNumber, password })).unwrap();
+      Alert.alert("Success", "Account created successfully");
+    } catch (error) {
+      Alert.alert("Signup Failed", error);
+    }
+  };
+
+  const signInWithGoogle = async () => {
+      try {
+        await GoogleSignin.hasPlayServices();
+        const userInfo = await GoogleSignin.signIn();
+        console.log(userInfo);
+  
+        const idToken = userInfo.data.idToken;
+  
+        // Send this token to backend
+        console.log(idToken);
+      } catch (error) {
+        console.log(error);
+      }
+    };
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
 
-      <Text style={styles.title}>Create an account,</Text>
-      <Text style={styles.subtitle}>
-        Please type full information bellow and we can {'\n'}create your account
-      </Text>
-
-      {/* Name Input */}
-      <View style={styles.inputBox}>
-        <View style={styles.inputWrapper}>
-          <Feather name="user" size={20} color="#888" style={styles.icon} />
-          <TextInput
-            style={styles.input}
-            placeholder="Name"
-            placeholderTextColor="#999"
-            value={name}
-            onChangeText={setName}
-            autoCapitalize="words"
-          />
-        </View>
-
-        {/* Email Input */}
-        <View style={styles.inputWrapper}>
-          <Feather name="mail" size={20} color="#888" style={styles.icon} />
-          <TextInput
-            style={styles.input}
-            placeholder="Email address"
-            placeholderTextColor="#999"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-        </View>
-
-        {/* Mobile Number Input with Country Code */}
-        <View style={styles.inputWrapper}>
-          {/* Country Code Picker */}
-          <View style={styles.countryCodeContainer}>
-            <Image
-              source={{ uri: 'https://cdn.jsdelivr.net/npm/country-flag-emoji-json@2.0.0/dist/images/US.svg' }} // Placeholder flag, you might want to use a local asset or a more robust library
-              style={styles.flagIcon}
-            />
-            <Picker
-              selectedValue={selectedCountryCode}
-              onValueChange={(itemValue, itemIndex) => setSelectedCountryCode(itemValue)}
-              style={styles.picker}
-              itemStyle={styles.pickerItem} // Apply style to picker items
-            >
-              <Picker.Item label="+01" value="+01" />
-              <Picker.Item label="+91" value="+91" />
-              <Picker.Item label="+44" value="+44" />
-              {/* Add more country codes as needed */}
-            </Picker>
-            <Feather name="chevron-down" size={16} color="#888" style={styles.pickerArrow} />
-          </View>
-          <TextInput
-            style={[styles.input, styles.mobileInput]}
-            placeholder="Mobile number"
-            placeholderTextColor="#999"
-            value={mobileNumber}
-            onChangeText={setMobileNumber}
-            keyboardType="phone-pad"
-          />
-        </View>
-
-        {/* Password Input */}
-        <View style={styles.inputWrapper}>
-          <Feather name="lock" size={20} color="#888" style={styles.icon} />
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            placeholderTextColor="#999"
-            secureTextEntry={!isPasswordVisible}
-            value={password}
-            onChangeText={setPassword}
-          />
-          <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisible)} style={styles.eyeIconContainer}>
-            <Feather
-              name={isPasswordVisible ? 'eye' : 'eye-off'}
-              size={20}
-              color="#888"
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <Text style={styles.termsText}>
-        By signing up you agree to our <Text style={styles.linkText}>Term of use and privacy {'\n'}notice</Text>
-      </Text>
-
-      {/* Join Now Button */}
-      <TouchableOpacity style={styles.joinNowButton} onPress={handleRegister}>
-        <Text style={styles.joinNowText}>Join Now</Text>
-      </TouchableOpacity>
-
-      {/* Divider */}
-      <Text style={styles.orText}>or</Text>
-
-      {/* Google Sign-Up */}
-      <TouchableOpacity style={styles.googleButton}>
-        <Image
-          source={require('../../assets/google-logo.png')} // Make sure you have this image in your assets folder
-          style={styles.googleIcon}
-        />
-        <Text style={styles.googleText}>Join with Google</Text>
-      </TouchableOpacity>
-
-      {/* Already have an account? Sign In */}
-      <TouchableOpacity>
-        <Text style={styles.footerText}>
-          Already have an account? <Text onPress={() => navigation.navigate('Login')} style={styles.signInLink}>Sign In</Text>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Text style={styles.title}>Create an account,</Text>
+        <Text style={styles.subtitle}>
+          Please type full information bellow and we can {'\n'}create your account
         </Text>
-      </TouchableOpacity>
+
+        {/* Name Input */}
+        <View style={styles.inputBox}>
+          <View style={styles.inputWrapper}>
+            <Feather name="user" size={20} color="#888" style={styles.icon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Name"
+              placeholderTextColor="#999"
+              value={name}
+              onChangeText={setName}
+              autoCapitalize="words"
+            />
+          </View>
+
+          {/* Email Input */}
+          <View style={styles.inputWrapper}>
+            <Feather name="mail" size={20} color="#888" style={styles.icon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Email address"
+              placeholderTextColor="#999"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+          </View>
+
+          {/* Mobile Number Input with Country Code */}
+          <View style={styles.inputWrapper}>
+            <View style={styles.countryCodeContainer}>
+              <Image
+                source={{ uri: countryFlags[selectedCountryCode] }}
+                style={styles.flagIcon}
+              />
+              <Text style={styles.countryCodeText}>{selectedCountryCode}</Text>
+
+              <Picker
+                selectedValue={selectedCountryCode}
+                onValueChange={(itemValue) => setSelectedCountryCode(itemValue)}
+                style={styles.picker}
+              >
+                <Picker.Item label="+91" value="+91" />
+                <Picker.Item label="+01" value="+01" />
+                <Picker.Item label="+44" value="+44" />
+              </Picker>
+            </View>
+
+            <TextInput
+              style={[styles.input, styles.mobileInput]}
+              placeholder="Mobile number"
+              placeholderTextColor="#999"
+              value={mobileNumber}
+              onChangeText={setMobileNumber}
+              keyboardType="phone-pad"
+            />
+          </View>
+
+          {/* Password Input */}
+          <View style={styles.inputWrapper}>
+            <Feather name="lock" size={20} color="#888" style={styles.icon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              placeholderTextColor="#999"
+              secureTextEntry={!isPasswordVisible}
+              value={password}
+              onChangeText={setPassword}
+            />
+            <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisible)} style={styles.eyeIconContainer}>
+              <Feather
+                name={isPasswordVisible ? 'eye' : 'eye-off'}
+                size={20}
+                color="#888"
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <Text style={styles.termsText}>
+          By signing up you agree to our <Text style={styles.linkText}>Term of use and privacy {'\n'}notice</Text>
+        </Text>
+
+        {/* Join Now Button */}
+        <TouchableOpacity
+          style={[styles.joinNowButton, signUpLoading && { opacity: 0.6 }]}
+          onPress={handleRegister}
+          disabled={signUpLoading}
+        >
+          {signUpLoading ? (
+            <Loader />
+          ) : (
+            <Text style={styles.joinNowText}>Join Now</Text>
+          )}
+        </TouchableOpacity>
+
+        {error && (
+          <Text style={{ color: 'red', textAlign: 'center', marginBottom: 20 }}>{error}</Text>
+        )}
+
+        {/* Divider */}
+        <Text style={styles.orText}>or</Text>
+
+        {/* Google Sign-Up */}
+        <TouchableOpacity onPress={signInWithGoogle} style={styles.googleButton}>
+          <Image
+            source={require('../../assets/google-logo.png')}
+            style={styles.googleIcon}
+          />
+          <Text style={styles.googleText}>Join with Google</Text>
+        </TouchableOpacity>
+
+        {/* Already have an account? Sign In */}
+        <TouchableOpacity>
+          <Text style={styles.footerText}>
+            Already have an account? <Text onPress={() => navigation.navigate('Login')} style={styles.signInLink}>Sign In</Text>
+          </Text>
+        </TouchableOpacity>
+
+        {/* Are You a Service Provider? */}
+        <TouchableOpacity
+          style={styles.providerContainer}
+          onPress={() => navigation.navigate('RoleSelection')}
+        >
+          <Text style={styles.providerText}>Are You a Service Provider?</Text>
+          <Text style={styles.providerLink}>Register as Partner</Text>
+        </TouchableOpacity>
+      </ScrollView>
     </View>
   );
 }
@@ -148,8 +218,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#ffffff',
+  },
+  scrollContent: {
     paddingHorizontal: 25,
-    paddingTop: StatusBar.currentHeight + 20, // Adjust for status bar
+    paddingTop: StatusBar.currentHeight + 20,
+    paddingBottom: 30,
   },
   title: {
     fontSize: 30,
@@ -164,16 +237,16 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   inputBox: {
-    marginBottom: 20, // Space below the input fields block
+    marginBottom: 20,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F0F3F6',
-    borderRadius: 15, // Slightly less rounded than full pill for a softer look
+    borderRadius: 15,
     paddingHorizontal: 15,
-    marginBottom: 15, // Space between input fields
-    height: 55, // Fixed height for consistency
+    marginBottom: 15,
+    height: 55,
   },
   icon: {
     marginRight: 10,
@@ -182,28 +255,33 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: '#333',
-    paddingVertical: 0, // Remove default vertical padding
+    paddingVertical: 0,
   },
-  // Specific styling for the mobile input when combined with country code
   mobileInput: {
-    flex: 1, // Allow it to take remaining space
+    flex: 1,
   },
   countryCodeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 10, // Space between picker and mobile input
+    marginRight: 10,
+  },
+  countryCodeText: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginHorizontal: 5,
+    color: '#333',
   },
   flagIcon: {
     width: 24,
     height: 24,
-    borderRadius: 12, // Make it circular
+    borderRadius: 12,
     marginRight: 5,
     borderWidth: 0.5,
     borderColor: '#ccc',
   },
   picker: {
-    width: 65, // Adjust width to fit content
-    height: 50, // Match inputWrapper height for vertical alignment
+    width: 40,
+    height: 50,
     color: '#333',
     paddingVertical: 0,
     justifyContent: 'center',
@@ -212,11 +290,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   pickerArrow: {
-    marginLeft: -5, // Adjust to bring closer to the text
+    marginLeft: -5,
     marginRight: 5,
   },
   eyeIconContainer: {
-    paddingLeft: 10, // Padding for better touch target
+    paddingLeft: 10,
   },
   termsText: {
     fontSize: 13,
@@ -226,11 +304,34 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   linkText: {
-    color: '#1E90FF', // Brighter blue
+    color: '#1E90FF',
     fontWeight: '600',
   },
+  providerContainer: {
+    marginTop: 20,
+    backgroundColor: '#E8F6F9',
+    paddingVertical: 15,
+    borderRadius: 25,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  providerText: {
+    fontSize: 15,
+    color: '#156778',
+    fontWeight: '600',
+  },
+  providerLink: {
+    fontSize: 16,
+    color: '#1E90FF',
+    fontWeight: 'bold',
+    marginTop: 3,
+  },
   joinNowButton: {
-    backgroundColor: '#156778', // Teal color
+    backgroundColor: '#156778',
     paddingVertical: 18,
     borderRadius: 30,
     alignItems: 'center',

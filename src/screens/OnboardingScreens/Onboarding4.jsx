@@ -33,7 +33,7 @@ export default function Onboarding4({ navigation }) {
           </Text>
 
           {/* Join with Google Button */}
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={[styles.button, styles.googleButton]}
             onPress={() => console.log('Join with Google pressed')}>
             <Image
@@ -41,14 +41,22 @@ export default function Onboarding4({ navigation }) {
               style={styles.googleIcon}
             />
             <Text style={styles.googleButtonText}>Join with Google</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           {/* Join with Email Button */}
           <TouchableOpacity
             style={[styles.button, styles.emailButton]}
             onPress={() =>  navigation.navigate('Auth', { screen: 'Register' })}>
-            <Feather name="mail" size={20} color="#FFFFFF" style={styles.icon} />
-            <Text style={styles.emailButtonText}>Join with Email</Text>
+            {/* <Feather name="mail" size={20} color="#FFFFFF" style={styles.icon} /> */}
+            <Text style={styles.emailButtonText}>Register</Text>
+          </TouchableOpacity>
+
+          {/* Continue Without Register */}
+          <TouchableOpacity
+            style={[styles.button, {borderWidth: 2.5,borderColor: '#156778',backgroundColor: '#0789a3'}]}
+            onPress={() =>  navigation.navigate('Auth', { screen: 'Register' })}>
+            {/* <Feather name="mail" size={20} color="#FFFFFF" style={styles.icon} /> */}
+            <Text style={styles.emailButtonText}>Continue Without Register</Text>
           </TouchableOpacity>
 
           {/* Sign In Link */}
@@ -72,6 +80,7 @@ const styles = StyleSheet.create({
   imageBackground: {
     flex: 1,
     justifyContent: 'flex-end', // Aligns content to the bottom
+    paddingBottom: 60
   },
   overlay: {
     ...StyleSheet.absoluteFillObject, // Covers the entire parent
@@ -133,7 +142,7 @@ const styles = StyleSheet.create({
   emailButtonText: {
     color: '#FFFFFF',
     fontWeight: 'bold',
-    fontSize: 16,
+    fontSize: 17,
   },
   footerText: {
     color: '#E0E0E0',

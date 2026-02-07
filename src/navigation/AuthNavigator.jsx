@@ -5,6 +5,9 @@ import RegisterScreen from '../screens/Auth/RegisterScreen';
 import ForgotPasswordScreen from '../screens/Auth/ForgotPasswordScreen';
 import EmailVerificationScreen from '../screens/Auth/EmailVerificationScreen';
 import ResetPasswordScreen from '../screens/Auth/ResetPasswordScreen';
+import RoleSelectionScreen from '../screens/Auth/RoleSelectionScreen';
+import SalonOwnerRegistrationScreen from '../screens/Auth/SalonOwnerRegistrationScreen';
+import IndependentRegistrationScreen from '../screens/Auth/IndependentRegistrationScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -16,6 +19,9 @@ export default function AuthNavigator() {
       <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
       <Stack.Screen name="EmailVerification" component={EmailVerificationScreen} />
       <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
+      <Stack.Screen name="RoleSelection" component={RoleSelectionScreen} />
+      <Stack.Screen name="SalonOwnerRegistration" component={SalonOwnerRegistrationScreen} />
+      <Stack.Screen name="IndependentRegistration" component={IndependentRegistrationScreen} />
     </Stack.Navigator>
   );
 }
